@@ -1,0 +1,26 @@
+This code emulates a single directory file system for an operating systems class.  To begin using userfs you must first format a disk with the -format flag.  
+./userfs -format diskSize filename 
+disk size is in bytes. Filename will be the text file where the virtual file system resides.
+The commands include u_import, u_export, u_del, u_ls, u_quota, and exit.
+u_import must have the arguments of the external file name then the new file name in the file system.
+u_export must have the arguments of the file sytem name then the new external file name.
+u_del will delete the file name provided from the filesystem.
+u_ls will list all the current files.
+u_quota will return a quota of the bytes and blocks remaining in the filesystem that are unallocated.
+exit will attempt a clean shutdown before closing the filesystem and terminating the program.
+userfs is delibrately programmed to crash at a random time to test how well the file system can recover from improper shutdowns.  
+
+Function implementations 
+u_import:
+u_import starts by various checks to make sure the file is suitable for the file system.  This includes making sure the file does not exceed the maximum amount of blocks per a file, making sure there is enough free space remaining to hold the file, making sure there is room for another file in the directory and a free inode, making sure the length of the file name is not too long and doesn't already exist.
+Next there is a search for a free unallocated file space within direcotrys file array.  The same is done for the inode by iterating through the file systems inodes for one that is free. Next there is an iteration through the bitmap allocating the file to the number of free blocks and saving them in the disk locations held under the inode.  Then the file is written into the filesystem by reading one block in at a time and writing it out to the allocated block specified by the inode.  Once the file is written, the inode, directory, bitmap and super block are then written in the order.  I chose to write the inode and the directory first because they are the most crucial parts for recovering the file.  In the case of a crash, the file system check can update the bitmap and superblock from the information given on the inode and user file stored in the directory block.  If only the inode was written and not the user file then the inode will be unallocated for use and the file will be lost.
+
+
+u_export :
+u_export opens a linux file and writes out to it block by block from the disk locations in the inode. If the user file does not exist it prints an error and nothing happens.
+
+u_del :
+u_del deletes a file by freeing the inode, blocks from the bitmap and user file entry in the directory.  Then the directory block, inode, bitmap and superblock are written out. If the system crashes and only the directory was written then the system can recognize the inodes and blocks that should be freed freed because they will not be listed under any user file in the directory.  
+
+u_fschk :
+u_fschk first checks every user file in the directory that is not free and checks that the inode and blocks that it uses are not free.  If either the inode or blocks allocated are listed as free than the system rewrites them as taken. During this procces the system stores all the allocated inodes and blocks that are allocated to files to check for any inodes or blocks that should be corrected as free. If any inodes or blocks are found that should be free but arnt the file system will be rewritten accordingly.
