@@ -1,4 +1,4 @@
-This code emulates a single directory file system for an operating systems class.  To begin using userfs you must first format a disk with the -format flag.  
+This code emulates a single directory file system for an operating systems class assignment.  To begin using userfs you must first format a disk with the -format flag.  
 ./userfs -format diskSize filename 
 disk size is in bytes. Filename will be the text file where the virtual file system resides.
 The commands include u_import, u_export, u_del, u_ls, u_quota, and exit.
